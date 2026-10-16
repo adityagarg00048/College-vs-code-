@@ -1,0 +1,161 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Node structure for Doubly Linked List
+typedef struct Node {
+    int data;
+    struct Node* prev;
+    struct Node* next;
+} Node;
+
+// Deque structure keeping track of Front and Rear
+typedef struct {
+    Node* front;
+    Node* rear;
+} Deque;
+
+// Initialize Deque
+void initDeque(Deque* dq) {
+    dq->front = NULL;
+    dq->rear = NULL;
+}
+
+// Check if Deque is empty
+int isEmpty(Deque* dq) {
+    return (dq->front == NULL);
+}
+
+// Insert an element at the Front
+void insertFront(Deque* dq, int value) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if (!newNode) {
+        printf("Memory allocation failed!\n");
+        return;
+    }
+    newNode->data = value;
+    newNode->prev = NULL;
+    newNode->next = dq->front;
+
+    if (isEmpty(dq)) {
+        dq->front = newNode;
+        dq->rear = newNode;
+    } else {
+        dq->front->prev = newNode;
+        dq->front = newNode;
+    }
+    printf("Inserted at Front: %d\n", value);
+}
+
+// Insert an element at the Rear
+void insertRear(Deque* dq, int value) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if (!newNode) {
+        printf("Memory allocation failed!\n");
+        return;
+    }
+    newNode->data = value;
+    newNode->next = NULL;
+    newNode->prev = dq->rear;
+
+    if (isEmpty(dq)) {
+        dq->front = newNode;
+        dq->rear = newNode;
+    } else {
+        dq->rear->next = newNode;
+        dq->rear = newNode;
+    }
+    printf("Inserted at Rear: %d\n", value);
+}
+
+// Delete an element from the Front
+int deleteFront(Deque* dq) {
+    if (isEmpty(dq)) {
+        printf("Deque Underflow! Cannot delete from front.\n");
+        return -1;
+    }
+    Node* temp = dq->front;
+    int data = temp->data;
+
+    dq->front = dq->front->next;
+
+    if (dq->front == NULL) {
+        dq->rear = NULL; // Deque became empty
+    } else {
+        dq->front->prev = NULL;
+    }
+
+    free(temp);
+    return data;
+}
+
+// Delete an element from the Rear
+int deleteRear(Deque* dq) {
+    if (isEmpty(dq)) {
+        printf("Deque Underflow! Cannot delete from rear.\n");
+        return -1;
+    }
+    Node* temp = dq->rear;
+    int data = temp->data;
+
+    dq->rear = dq->rear->prev;
+
+    if (dq->rear == NULL) {
+        dq->front = NULL; // Deque became empty
+    } else {
+        dq->rear->next = NULL;
+    }
+
+    free(temp);
+    return data;
+}
+
+// Fetch Front element without removing it
+int getFront(Deque* dq) {
+    if (isEmpty(dq)) return -1;
+    return dq->front->data;
+}
+
+// Fetch Rear element without removing it
+int getRear(Deque* dq) {
+    if (isEmpty(dq)) return -1;
+    return dq->rear->data;
+}
+
+// Display Deque from Front to Rear
+void display(Deque* dq) {
+    if (isEmpty(dq)) {
+        printf("Deque is empty!\n");
+        return;
+    }
+    Node* temp = dq->front;
+    printf("Deque elements (Front -> Rear): ");
+    while (temp != NULL) {
+        printf("%d ", temp->data);
+        temp = temp->next;
+    }
+    printf("\n");
+}
+
+int main() {
+    Deque dq;
+    initDeque(&dq);
+
+    // Testing Insert Operations
+    insertRear(&dq, 10);
+    insertRear(&dq, 20);
+    insertFront(&dq, 5);
+    insertFront(&dq, 1);
+    display(&dq); // Expected: 1 5 10 20
+
+    // Testing Delete Operations
+    printf("Deleted from Front: %d\n", deleteFront(&dq)); // Expected: 1
+    printf("Deleted from Rear: %d\n", deleteRear(&dq));   // Expected: 20
+    display(&dq); // Expected: 5 10
+
+    // Clean up remaining memory
+    while (!isEmpty(&dq)) {
+        deleteFront(&dq);
+    }
+
+    return 0;
+}
