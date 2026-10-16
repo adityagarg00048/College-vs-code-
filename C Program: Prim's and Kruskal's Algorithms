@@ -1,0 +1,161 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define V 5 // Number of vertices in the graph
+#define INF 999999
+
+// ============================================================================
+// 1. PRIM'S ALGORITHM IMPLEMENTATION (Using Adjacency Matrix)
+// ============================================================================
+
+// Find the vertex with the minimum key value from the set of unvisited vertices
+int minKey(int key[], bool mstSet[]) {
+    int min = INF, min_index;
+    for (int v = 0; v < V; v++) {
+        if (mstSet[v] == false && key[v] < min) {
+            min = key[v];
+            min_index = v;
+        }
+    }
+    return min_index;
+}
+
+void primMST(int graph[V][V]) {
+    int parent[V];  // Array to store constructed MST
+    int key[V];     // Key values used to pick minimum weight edge in cut
+    bool mstSet[V]; // To represent set of vertices included in MST
+
+    for (int i = 0; i < V; i++) {
+        key[i] = INF;
+        mstSet[i] = false;
+    }
+
+    key[0] = 0;     // Make key 0 so that this vertex is picked as first vertex
+    parent[0] = -1; // First node is always root of MST
+
+    for (int count = 0; count < V - 1; count++) {
+        int u = minKey(key, mstSet);
+        mstSet[u] = true;
+
+        for (int v = 0; v < V; v++) {
+            // graph[u][v] is non-zero only for adjacent vertices of m
+            // mstSet[v] is false for vertices not yet included in MST
+            // Update the key only if graph[u][v] is smaller than key[v]
+            if (graph[u][v] && mstSet[v] == false && graph[u][v] < key[v]) {
+                parent[v] = u;
+                key[v] = graph[u][v];
+            }
+        }
+    }
+
+    printf("\n--- Prim's MST Edges ---\n");
+    int totalWeight = 0;
+    for (int i = 1; i < V; i++) {
+        printf("%d - %d \tWeight: %d\n", parent[i], i, graph[i][parent[i]]);
+        totalWeight += graph[i][parent[i]];
+    }
+    printf("Total MST Weight (Prim's): %d\n", totalWeight);
+}
+
+// ============================================================================
+// 2. KRUSKAL'S ALGORITHM IMPLEMENTATION (Using Edge List & DSU)
+// ============================================================================
+
+typedef struct Edge {
+    int src, dest, weight;
+} Edge;
+
+// DSU Structure Functions
+int find(int parent[], int i) {
+    if (parent[i] == -1)
+        return i;
+    return find(parent, parent[i]); // Path compression can be added here
+}
+
+void Union(int parent[], int x, int y) {
+    int xset = find(parent, x);
+    int yset = find(parent, y);
+    if(xset != yset) {
+        parent[xset] = yset;
+    }
+}
+
+// Comparator function for qsort to sort edges by ascending weight
+int compareEdges(const void* a, const void* b) {
+    Edge* a_edge = (Edge*)a;
+    Edge* b_edge = (Edge*)b;
+    return a_edge->weight - b_edge->weight;
+}
+
+void kruskalMST(Edge edges[], int E) {
+    // Step 1: Sort all edges in non-decreasing order of their weight
+    qsort(edges, E, sizeof(Edge), compareEdges);
+
+    int* parent = (int*)malloc(V * sizeof(int));
+    for (int i = 0; i < V; i++) parent[i] = -1;
+
+    printf("\n--- Kruskal's MST Edges ---\n");
+    int edgeCount = 0;
+    int i = 0;
+    int totalWeight = 0;
+
+    // Number of edges in MST will be equal to (V - 1)
+    while (edgeCount < V - 1 && i < E) {
+        Edge next_edge = edges[i++];
+
+        int x = find(parent, next_edge.src);
+        int y = find(parent, next_edge.dest);
+
+        // If including this edge doesn't cause a cycle, include it
+        if (x != y) {
+            printf("%d - %d \tWeight: %d\n", next_edge.src, next_edge.dest, next_edge.weight);
+            totalWeight += next_edge.weight;
+            Union(parent, x, y);
+            edgeCount++;
+        }
+    }
+    printf("Total MST Weight (Kruskal's): %d\n", totalWeight);
+    free(parent);
+}
+
+// ============================================================================
+// MAIN EXECUTION
+// ============================================================================
+int main() {
+    /* 
+       Let's construct a sample weighted graph:
+             2       3
+         (0)---(1)---(2)
+
+          |   / |   / |
+         6|  /8 |5 /7 |9
+
+          | /   | /   |
+         (3)---(4)-----
+             7
+    */
+    int graphMatrix[V][V] = {
+        {0, 2, 0, 6, 0},
+        {2, 0, 3, 8, 5},
+        {0, 3, 0, 0, 7},
+        {6, 8, 0, 0, 7},
+        {0, 5, 7, 7, 0}
+    };
+
+    // Run Prim's algorithm using the matrix representation
+    primMST(graphMatrix);
+
+    // Prepare structure edge input data for Kruskal's algorithm
+    int E = 7; // Total number of edges in our sample graph
+    Edge edges[7] = {
+        {0, 1, 2}, {0, 3, 6}, {1, 2, 3}, 
+        {1, 3, 8}, {1, 4, 5}, {2, 4, 7}, 
+        {3, 4, 7}
+    };
+
+    // Run Kruskal's algorithm using the edge list representation
+    kruskalMST(edges, E);
+
+    return 0;
+}
