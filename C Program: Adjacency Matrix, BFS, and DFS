@@ -1,0 +1,107 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_VERTICES 10
+
+// Graph structure using an Adjacency Matrix
+typedef struct Graph {
+    int numVertices;
+    int adjMatrix[MAX_VERTICES][MAX_VERTICES];
+} Graph;
+
+// Initialize graph with 0 edges
+void initGraph(Graph* g, int vertices) {
+    g->numVertices = vertices;
+    for (int i = 0; i < vertices; i++) {
+        for (int j = 0; j < vertices; j++) {
+            g->adjMatrix[i][j] = 0;
+        }
+    }
+}
+
+// Add an edge to an undirected graph
+void addEdge(Graph* g, int src, int dest) {
+    g->adjMatrix[src][dest] = 1;
+    g->adjMatrix[dest][src] = 1; // Remove this line for a Directed Graph
+}
+
+// ==========================================
+// 1. BREADTH-FIRST SEARCH (BFS)
+// ==========================================
+void BFS(Graph* g, int startVertex) {
+    int visited[MAX_VERTICES] = {0};
+    int queue[MAX_VERTICES];
+    int front = 0, rear = 0;
+
+    printf("BFS Traversal starting from node %d: ", startVertex);
+
+    // Enqueue start vertex and mark as visited
+    visited[startVertex] = 1;
+    queue[rear++] = startVertex;
+
+    while (front < rear) {
+        int currentVertex = queue[front++];
+        printf("%d ", currentVertex);
+
+        // Check all adjacent neighbors
+        for (int i = 0; i < g->numVertices; i++) {
+            if (g->adjMatrix[currentVertex][i] == 1 && !visited[i]) {
+                visited[i] = 1;
+                queue[rear++] = i; // Enqueue
+            }
+        }
+    }
+    printf("\n");
+}
+
+// ==========================================
+// 2. DEPTH-FIRST SEARCH (DFS)
+// ==========================================
+void DFSHelper(Graph* g, int vertex, int visited[]) {
+    visited[vertex] = 1;
+    printf("%d ", vertex);
+
+    // Recursively visit all unvisited adjacent neighbors
+    for (int i = 0; i < g->numVertices; i++) {
+        if (g->adjMatrix[vertex][i] == 1 && !visited[i]) {
+            DFSHelper(g, i, visited);
+        }
+    }
+}
+
+void DFS(Graph* g, int startVertex) {
+    int visited[MAX_VERTICES] = {0};
+    printf("DFS Traversal starting from node %d: ", startVertex);
+    DFSHelper(g, startVertex, visited);
+    printf("\n");
+}
+
+// ==========================================
+// MAIN FUNCTION
+// ==========================================
+int main() {
+    Graph g;
+    int vertices = 5;
+    initGraph(&g, vertices);
+
+    /* 
+       Creating a sample undirected graph:
+          0 --- 1
+
+          |   / |
+          |  /  |
+          4 --- 2 --- 3
+    */
+    addEdge(&g, 0, 1);
+    addEdge(&g, 0, 4);
+    addEdge(&g, 1, 2);
+    addEdge(&g, 1, 4);
+    addEdge(&g, 2, 3);
+    addEdge(&g, 2, 4);
+
+    // Run Traversals
+    BFS(&g, 0); // Expected output order: 0 1 4 2 3
+    DFS(&g, 0); // Expected output order: 0 1 2 3 4 
+
+    return 0;
+}
